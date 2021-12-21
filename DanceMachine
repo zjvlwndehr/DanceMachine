@@ -16,6 +16,7 @@ mp_drawing_style_dot_Wrong = mp_drawing.DrawingSpec(color=(100,100,100), thickne
 mp_drawing_style_line_Wrong = mp_drawing.DrawingSpec(color=(0,0,255), thickness=2, circle_radius=2)
 mp_drawing_style_dot_Right = mp_drawing.DrawingSpec(color=(100,100,0), thickness=2, circle_radius=2)
 mp_drawing_style_line_Right = mp_drawing.DrawingSpec(color=(0,255,0), thickness=2, circle_radius=2)
+font = cv2.FONT_HERSHEY_SIMPLEX
 
 segmentor = SelfiSegmentation()
 fpsReader = cvzone.FPS()
@@ -66,13 +67,18 @@ with mp_pose.Pose(
 
  
   while vidcap.isOpened():
+    mp_drawing_style_dot = mp_drawing_style_dot_standard
+    mp_drawing_style_line = mp_drawing_style_line_standard
+
     success, img = cap.read()
     success2, src = vidcap.read()
     frame +=1
     nowsec = frame / 25
-
-    if nowsec in posesec:
-      nowpose = posedata[nowsec]
+    if nowsec == 4.48:
+      print("4.48 checked!")
+    if str(nowsec) in posesec:
+      print("checked!")
+      nowpose = posedata[str(nowsec)]
       recog = True
     else:
       recog = False
@@ -92,8 +98,6 @@ with mp_pose.Pose(
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     results = pose.process(image)
 
-    mp_drawing_style_dot = mp_drawing_style_dot_Right
-    mp_drawing_style_line = mp_drawing_style_line_Right
 
     # Draw the pose annotation on the image.
     image.flags.writeable = True
@@ -107,28 +111,36 @@ with mp_pose.Pose(
     except: # when landmark dosen't exist.
       pass
     if recog == True:
-      print("EVENT")
+      
 
       print(f"true{nowsec}")
       for idx1, idx2 in index:
-        # Standard inclination
-        M = (nowpose[idx2]['Y'] - nowpose[idx1]['Y']) / (nowpose[idx2]['X'] - nowpose[idx1]['X'])
-        # User inclination
-        m = -((keypoints[idx2]['Y'] - keypoints[idx1]['Y']) / (keypoints[idx2]['X'] - keypoints[idx1]['X']))
-        if (M - errp <= m <= M + errp):
-          count += 1
+        try:
+          # Standard inclination
+          M = (nowpose[idx2]['Y'] - nowpose[idx1]['Y']) / (nowpose[idx2]['X'] - nowpose[idx1]['X'])
+          # User inclination
+          m = -((keypoints[idx2]['Y'] - keypoints[idx1]['Y']) / (keypoints[idx2]['X'] - keypoints[idx1]['X']))
+          if (M - errp <= m <= M + errp):
+            count += 1
+            mp_drawing_style_dot = mp_drawing_style_dot_Right
+            mp_drawing_style_line = mp_drawing_style_line_Right
+          else:
+            mp_drawing_style_dot = mp_drawing_style_dot_Wrong
+            mp_drawing_style_line = mp_drawing_style_line_Wrong
+        except:
+          pass
 
     mp_drawing.draw_landmarks(image, results.pose_landmarks, mp_pose.POSE_CONNECTIONS, mp_drawing_style_dot, mp_drawing_style_line)
+    text = f'points : {count * 10}'
 
+    cv2.putText(standard, text, (50, 100), font, 1, (0,255,0),2)
     imgStack = cvzone.stackImages([standard, cv2.flip(image, 1)], 2,1)
-    cv2.imshow(f'points{count * 10}', imgStack)
+    
+    print(f'points : {count * 10}')
+    cv2.imshow('Dance Machine', imgStack)
     if cv2.waitKey(5) & 0xFF == 27:
       break
-  points = count * 10
   import time
-  time.sleep(3)
+  time.sleep(1)
   cap.release()
   vidcap.release()
-print(f'points:{points}')
-# cap.destroyAllwindows()
-# vidcap.destroyAllwindows()
