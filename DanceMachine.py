@@ -4,7 +4,9 @@ import cvzone
 from cvzone.SelfiSegmentationModule import SelfiSegmentation
 import os
 from json import loads
-
+import time
+import multiprocessing
+import playsound
 from numpy import true_divide
 
 mp_drawing = mp.solutions.drawing_utils
@@ -22,8 +24,9 @@ segmentor = SelfiSegmentation()
 fpsReader = cvzone.FPS()
 
 index = [(11, 13),(13, 15), (12, 14), (14, 16), (24, 26), (26, 28), (23, 25), (25, 27)]
+dir = "E:\\Development\\Python\\DanceMachine\\resource"
 
-f = open('E:\\Development\\Python\\DanceMachine\\resource\\pose.json')
+f = open(f'{dir}\\pose.json')
 posedata = loads(f.read())
 f.close()
 
@@ -59,14 +62,20 @@ with mp_pose.Pose(
   # webcam input:
   cap = cv2.VideoCapture(0,cv2.CAP_DSHOW)
   # video input
-  bg = cv2.imread("E:\\Development\\Python\\DanceMachine\\resource\\bg1.jpg")
-  vidcap = cv2.VideoCapture('E:\\Development\\Python\\DanceMachine\\resource\\sample.mp4')
+  bg = cv2.imread(f"{dir}\\bg1.jpg")
+  vidcap = cv2.VideoCapture(f'{dir}\\sample.mp4')
   
+
   width, height = int(cap.get(3)), int(cap.get(4))
   bg = cv2.resize(bg, (width, height), interpolation=cv2.INTER_AREA)
+  triggar = False
 
- 
+  def soundgo():
+    os.system(f"{dir}\\sample.mp3")
+
   while vidcap.isOpened():
+    if frame == 0:
+      soundgo()
     mp_drawing_style_dot = mp_drawing_style_dot_standard
     mp_drawing_style_line = mp_drawing_style_line_standard
 
@@ -74,10 +83,7 @@ with mp_pose.Pose(
     success2, src = vidcap.read()
     frame +=1
     nowsec = frame / 25
-    if nowsec == 4.48:
-      print("4.48 checked!")
     if str(nowsec) in posesec:
-      print("checked!")
       nowpose = posedata[str(nowsec)]
       recog = True
     else:
@@ -111,9 +117,6 @@ with mp_pose.Pose(
     except: # when landmark dosen't exist.
       pass
     if recog == True:
-      
-
-      print(f"true{nowsec}")
       for idx1, idx2 in index:
         try:
           # Standard inclination
@@ -136,11 +139,11 @@ with mp_pose.Pose(
     cv2.putText(standard, text, (50, 100), font, 1, (0,255,0),2)
     imgStack = cvzone.stackImages([standard, cv2.flip(image, 1)], 2,1)
     
-    print(f'points : {count * 10}')
+    # print(f'points : {count * 10}')
     cv2.imshow('Dance Machine', imgStack)
     if cv2.waitKey(5) & 0xFF == 27:
       break
-  import time
+  os.system('taskkill /f /fi "windowtitle eq Groove 음악"')
   time.sleep(1)
   cap.release()
   vidcap.release()
