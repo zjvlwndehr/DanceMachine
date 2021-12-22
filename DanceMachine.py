@@ -138,8 +138,6 @@ with mp_pose.Pose(
     
     mp_drawing.draw_landmarks(image, results.pose_landmarks, mp_pose.POSE_CONNECTIONS, mp_drawing_style_dot, mp_drawing_style_line)
 
-
-    
     text = f'points : {count * 10}'
 
     cv2.putText(standard, text, (50, 100), font, 1, (0,255,0),2)
