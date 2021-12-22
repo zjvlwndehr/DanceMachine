@@ -24,7 +24,7 @@ segmentor = SelfiSegmentation()
 fpsReader = cvzone.FPS()
 
 index = [(11, 13),(13, 15), (12, 14), (14, 16), (24, 26), (26, 28), (23, 25), (25, 27)]
-dir = "E:\\Development\\Python\\DanceMachine\\resource"
+dir = "E:\\DanceMachine\\resource"
 
 f = open(f'{dir}\\pose.json')
 posedata = loads(f.read())
@@ -91,7 +91,6 @@ with mp_pose.Pose(
 
     standard = cv2.resize(src, (width, height), interpolation=cv2.INTER_AREA)
     
-    image = segmentor.removeBG(img, bg, threshold=0.8)
     
     if not success:
       print("Ignoring empty camera frame.")
@@ -100,6 +99,9 @@ with mp_pose.Pose(
 
       print("Ignoring empty video frame.")
       continue
+    
+    image = img
+
     image.flags.writeable = False
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     results = pose.process(image)
@@ -132,8 +134,12 @@ with mp_pose.Pose(
             mp_drawing_style_line = mp_drawing_style_line_Wrong
         except:
           pass
-
+    image = segmentor.removeBG(img, bg, threshold=0.8)
+    
     mp_drawing.draw_landmarks(image, results.pose_landmarks, mp_pose.POSE_CONNECTIONS, mp_drawing_style_dot, mp_drawing_style_line)
+
+
+    
     text = f'points : {count * 10}'
 
     cv2.putText(standard, text, (50, 100), font, 1, (0,255,0),2)
